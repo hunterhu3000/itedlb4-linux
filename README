@@ -1,0 +1,134 @@
+======================
+ITE DLB4 Linux README
+VERSION : 1.0.6
+Author  : Donald Huang
+=======================
+
+
+====================
+Install USB Library
+====================
+
+sudo apt-get install libusb-1.0-0-dev
+
+===================
+Compiler itedlb4
+===================
+
+make
+
+=====
+Usage 
+=====
+
+sudo ./ite -f ec_filename.bin
+
+
+==============
+Snapshot 1.0.6
+==============
+donald@donald-TT-3437:~/work/iot/itedlb4-linux$ sudo ./ite -f zephyr_hello.bin 
+
+Flash via I2C interface...
+ITE DLB4 Linux Flash Tool: Version 1.0.6
+Current time is Fri Jun 24 10:30:52 2022
+
+Open file: zephyr_hello.bin
+Using libusb v1.0.21.11156
+
+Connecting ITE Device....
+Protect Status: mode=ff data=0 2
+
+
+ITE DLB4 FW Version : 0014
+===================================
+CHIP ID          : 1302c1 ( 81302 ) 
+Flash ID         : c8 65 14
+Eraseing...      : 100%
+Checking...      : 100%
+Programng...     : 100%
+Verifying...     : 100%
+
+Protect Status: mode=82 data=0 2
+Current time is Fri Jun 24 10:30:57 2022
+donald@donald-TT-3437:~/work/iot/itedlb4-linux$ 
+
+
+==============
+Snapshot 1.0.5
+==============
+
+
+donald@donald-TT-3437:~/work/iot/itedlb4-linux$ sudo ./ite -f zephyr.bin -u
+[sudo] password for donald: 
+
+Flash via SPI interface...
+ITE DLB4 Linux Flash Tool: Version 1.0.5
+Current time is Mon Apr 25 14:43:12 2022
+
+Open file: zephyr.bin
+Using libusb v1.0.21.11156
+
+Connecting ITE Device....
+Flash via SPI interface...
+
+ITE DLB4 FW Version : 0014
+===================================
+Flash ID         : c8 65 14
+Eraseing...      : 100%
+Checking...      : 100%
+Programng...     : 100%
+Verifying...     : 100%
+Current time is Mon Apr 25 14:43:16 2022
+donald@donald-TT-3437:~/work/iot/itedlb4-linux$ 
+
+
+
+==============
+Snapshot 1.0.4
+==============
+
+donald@donald-TT-3437:~/work/iot/itedlb4-linux$ make
+gcc -c -g -O2               -o itedlb4flash.o itedlb4flash.c -I/usr/include/libusb-1.0  
+gcc -g -O2               -o ite itedlb4flash.o  -lusb-1.0 
+
+donald@donald-TT-3437:~/work/iot/itedlb4-linux$ sudo ./ite -f zephyr_hello_world_intel.bin 
+
+ITE DLB4 Linux Flash Tool: Version 1.0.4
+Current time is Tue Apr 12 14:39:32 2022
+
+Open file: zephyr_hello_world_intel.bin
+Using libusb v1.0.21.11156
+
+Connecting ITE Device....
+
+ITE DLB4 FW Version : 0013
+===================================
+CHIP ID          : 1202c0 ( 81202 ) 
+Flash ID         : c8 65 14
+Eraseing...      : 100%
+Checking...      : 100%
+Programng...     : 100%
+Verifying...     : 100%
+Current time is Tue Apr 12 14:39:37 2022
+donald@donald-TT-3437:~/work/iot/itedlb4-linux$ sudo ./ite -f zephyr_hello_world_intel.bin -s check
+
+ITE DLB4 Linux Flash Tool: Version 1.0.4
+Current time is Tue Apr 12 14:39:53 2022
+
+Open file: zephyr_hello_world_intel.bin
+Using libusb v1.0.21.11156
+
+Connecting ITE Device....
+
+ITE DLB4 FW Version : 0013
+===================================
+CHIP ID          : 1202c0 ( 81202 ) 
+Flash ID         : c8 65 14
+Eraseing...      : 100%
+Programng...     : 100%
+Verifying...     : 100%
+Current time is Tue Apr 12 14:39:58 2022
+donald@donald-TT-3437:~/work/iot/itedlb4-linux$ sudo ./ite -f zephyr_hello_world_intel.bin -s check -s verify
+
+
