@@ -784,31 +784,81 @@ int do_iteflash()
 
 
 
-int ite_device(uint16_t vid, uint16_t pid)
+int ite_device(uint16_t vid, uint16_t pid, int busId, int deviceId)
 {
-	libusb_device_handle *handle;
+	libusb_device **list;
+	libusb_device_handle *handle = NULL;
 	libusb_device *dev;
 	int i, j, k, r=0;
+	int num_devs, found = 0;
 	uint8_t endpoint_in = 0, endpoint_out = 0;	// default IN and OUT endpoints
 
-	ITE_DBG("\n\rOpening device...\n");
-	handle = libusb_open_device_with_vid_pid(NULL, vid, pid);
+	if (busId == -1 || deviceId == -1) {
+		ITE_DBG("\n\rOpening device...\n");
+		handle = libusb_open_device_with_vid_pid(NULL, vid, pid);
 
-	if (handle == NULL) {
-		perr("  Failed.\n");
-		return -1;
+		if (handle == NULL) {
+			printf("Failed 1\n");
+			perr("  Failed 1.\n");
+			return -1;
+		}
+
+		endpoint_in = 0x81;
+		endpoint_out = 0x02;
+		devinfo.handle = handle;
+		devinfo.endpoint_in = endpoint_in;
+		devinfo.endpoint_out = endpoint_out;
+		//CALL_CHECK(do_iteflash());
+		r=do_iteflash();
+		ITE_DBG("Closing device...\n");
+		libusb_close(handle);
+	}
+	else
+	{
+		num_devs = libusb_get_device_list(NULL, &list);
+		if (num_devs < 0)
+		{
+			printf("Failed 2: num_devs = %d\n", num_devs);
+			return -1;
+		}
+
+		for(i = 0; i < num_devs; i++) {
+			libusb_device *dev = list[i];
+			printf("bus, device = %d, %d\n", libusb_get_bus_number(dev), libusb_get_device_address(dev));
+			if (libusb_get_bus_number(dev) == busId && libusb_get_device_address(dev) == deviceId) {
+				int status = libusb_open(dev, &handle);
+				printf("@@@ libusb_open: status = %d\n", status);
+				if (handle == NULL) {
+					printf("Failed 3\n");
+					perr("  Failed 3.\n");
+					return -1;
+				}
+
+				found = 1;
+				break;
+			}
+		}
+		if (found)
+		{
+	                endpoint_in = 0x81;
+        	        endpoint_out = 0x02;
+                	devinfo.handle = handle;
+	                devinfo.endpoint_in = endpoint_in;
+        	        devinfo.endpoint_out = endpoint_out;
+                	//CALL_CHECK(do_iteflash());
+	                r=do_iteflash();
+		}
+		else
+		{
+			printf("Failed 4\n");
+		}
+		
+                ITE_DBG("Closing device...\n");
+                libusb_close(handle);
+		libusb_free_device_list(list, 1);
 	}
 
-	endpoint_in = 0x81;
-	endpoint_out = 0x02;
-	devinfo.handle = handle;
-	devinfo.endpoint_in = endpoint_in;
-	devinfo.endpoint_out = endpoint_out;
-	//CALL_CHECK(do_iteflash());
-	r=do_iteflash();
-	ITE_DBG("Closing device...\n");
-	libusb_close(handle);
-
+        printf("r = %d\n", r);
 	return r;
 }	
 
@@ -935,8 +985,9 @@ int main(int argc, char** argv)
 	int option_index = 0;
 	int c;
 	char *filename=NULL;
-	//char *optstring = "f:s:";
-	char *optstring = "f:s:u";
+	int busId=-1;
+	int deviceId=-1;
+	char *optstring = "f:s:u:d:b:";
 	char *skip=NULL;
 	char skip_check[]="check";
 	char skip_verify[]="verify";
@@ -944,6 +995,8 @@ int main(int argc, char** argv)
         	{ "filename",       required_argument,      NULL, 'f' },
         	{ "skip",           required_argument,      NULL, 's' },
         	{ "usespi",        no_argument,      NULL, 'u' },
+        	{ "busId",          required_argument,      NULL, 'b' },
+        	{ "deviceId",       required_argument,      NULL, 'd' },
         	{ 0, 0, 0, 0}
     	};
 
@@ -966,6 +1019,8 @@ int main(int argc, char** argv)
                         case 'u': 
 				  g_flag |= ITE_USE_SPI;
                                   break;
+			case 'b': busId=atoi(optarg); 		break;
+			case 'd': deviceId=atoi(optarg);	break;
             		default:
                 		printf("Usage: %s [...]\n", argv[0]);
                 		exit(1);
@@ -974,6 +1029,7 @@ int main(int argc, char** argv)
 
 	check_parameter();
 
+	printf("@@@ busId = %d, deviceId = %d\n", busId, deviceId);
 	printf("\n\rITE DLB4 Linux Flash Tool: Version %s\n\r",VERSION);
 	show_time();
 	if(filename == NULL) {
@@ -987,12 +1043,12 @@ int main(int argc, char** argv)
                 exit(1);
 	}	
 
-	r=init_usb();
+	r=init_usb(NULL);
 	if (r < 0)
                 return r;
 
 
-	r=ite_device(VID,PID);
+	r=ite_device(VID,PID,busId,deviceId);
 	if(r<0) {
 		printf("\n\rFlash Fail...");
 		printf("\n\rPlease re-plug the 8390 download board or ");
